@@ -1,0 +1,19 @@
+llm:
+  mode: "ollama" # "ollama" or "gpt-oss"
+  ollama_model: "gemma4:e4b"
+  gpt_oss_base_url: "http://gpt-oss-endpoint/v1"
+  gpt_oss_api_key: "dummy-key"
+  temperature: 0.0
+
+vector_db:
+  persist_dir: "./.chroma_data"
+  routing_threshold: 0.6
+  mapping_threshold: 0.6
+  top_k_tools: 5
+
+logger:
+  level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR"
+  format: "json" # "json" or "console"
+
+redis:
+  url: "redis://localhost:6379/0"

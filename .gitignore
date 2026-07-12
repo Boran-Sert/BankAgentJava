@@ -1,0 +1,5 @@
+/.chroma_data
+/.idea
+/.pytest_cache
+/.vscode
+/venv
