@@ -27,3 +27,6 @@ class AgentState(TypedDict):
     # Confirmation Management for MUTATING_CRITICAL tools
     requires_confirmation: bool
     confirmation_status: str # IDLE, PENDING, APPROVED, REJECTED
+    
+    # Error Management
+    grounding_error: Optional[bool]

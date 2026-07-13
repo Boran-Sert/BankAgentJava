@@ -21,7 +21,7 @@ def execution_node(state: AgentState) -> dict:
     logger.info("executing_transaction", intent=intent, payload=grounded)
 
     # 1. Execute the mapped LangChain tool dynamically
-    action_result = tool_registry.execute(intent, user_id=user_id, **grounded)
+    action_result = tool_registry.execute(intent, **grounded)
     
     # 2. Use LLM to generate a natural language success message based on the result
     sys_prompt = f"""You are a professional banking AI assistant.

@@ -18,8 +18,8 @@ class JavaRequest(BaseModel):
     session_id: str
     user_id: str
     message: str
-    expected_specs: Optional[List[ServiceSpec]] = []
-    requires_confirmation: Optional[bool] = False
+    expected_specs: Optional[List[ServiceSpec]] = None
+    requires_confirmation: Optional[bool] = None
     rejected_field: Optional[str] = None
     rejection_reason: Optional[str] = None
 
@@ -34,7 +34,7 @@ async def process_message(request: JavaRequest):
         user_id=request.user_id
     )
     
-    logger.info("incoming_request", message=request.message, expected_specs=len(request.expected_specs))
+    logger.info("incoming_request", message=request.message, expected_specs=len(request.expected_specs) if request.expected_specs else 0)
 
     try:
         # Configuration for LangGraph Checkpointer (persistence)
@@ -46,7 +46,7 @@ async def process_message(request: JavaRequest):
         state_values = current_state.values if current_state else {}
         
         # Update expected_specs
-        if request.expected_specs:
+        if request.expected_specs is not None:
             # We convert ServiceSpec to dict for state
             state_values["expected_specs"] = [s.dict() for s in request.expected_specs]
             
@@ -65,7 +65,8 @@ async def process_message(request: JavaRequest):
                     intent=state_values.get("active_intent", "UNKNOWN"),
                     status="IN_PROGRESS",
                     parameters=state_values.get("collected_parameters", {}),
-                    message_to_user=f"İşleminiz reddedildi: {request.rejection_reason}. Lütfen yeni bir değer giriniz."
+                    message_to_user=f"İşleminiz reddedildi: {request.rejection_reason}. Lütfen yeni bir değer giriniz.",
+                    thinking=None
                 )
 
         # Append new user message to state
@@ -77,12 +78,13 @@ async def process_message(request: JavaRequest):
         }
         
         # If we modified expected_specs or collected_parameters (due to rejection), we pass them too
-        if request.expected_specs or request.rejected_field:
+        if request.expected_specs is not None or request.rejected_field:
             input_state["expected_specs"] = state_values.get("expected_specs", [])
             input_state["collected_parameters"] = state_values.get("collected_parameters", {})
             input_state["confirmation_status"] = state_values.get("confirmation_status", "IDLE")
 
-        input_state["requires_confirmation"] = request.requires_confirmation
+        if request.requires_confirmation is not None:
+            input_state["requires_confirmation"] = request.requires_confirmation
 
         # Execute Graph
         logger.info("invoking_stategraph")
@@ -99,12 +101,33 @@ async def process_message(request: JavaRequest):
         old_msg_count = len(state_values.get("messages", [])) + 1 
         new_messages = messages[old_msg_count:]
         
-        ai_messages = [m.content for m in new_messages if isinstance(m, AIMessage)]
+        ai_messages = [m for m in new_messages if isinstance(m, AIMessage)]
         
-        if ai_messages:
-            message_to_user = "\n\n".join(ai_messages)
+        import re
+        thinking_parts = []
+        content_parts = []
+        
+        for m in ai_messages:
+            content = m.content
+            # Try to extract <think> block from content
+            think_match = re.search(r'<think>(.*?)</think>', content, flags=re.DOTALL)
+            if think_match:
+                thinking_parts.append(think_match.group(1).strip())
+                content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+            
+            # Check for reasoning in additional_kwargs (ChatOllama might put it here)
+            if "reasoning" in m.additional_kwargs:
+                thinking_parts.append(str(m.additional_kwargs["reasoning"]).strip())
+                
+            if content:
+                content_parts.append(content)
+        
+        if content_parts:
+            message_to_user = "\n\n".join(content_parts)
         else:
             message_to_user = "İşleminize devam ediyorum..."
+            
+        thinking_to_user = "\n\n".join(thinking_parts) if thinking_parts else None
             
         status = "IN_PROGRESS"
         if not active_intent:
@@ -115,7 +138,8 @@ async def process_message(request: JavaRequest):
             intent=active_intent or "UNKNOWN",
             status=status,
             parameters=parameters,
-            message_to_user=message_to_user
+            message_to_user=message_to_user,
+            thinking=thinking_to_user
         )
 
         return SanityFilter.validate_final_response(response)

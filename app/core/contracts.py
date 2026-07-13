@@ -33,3 +33,4 @@ class BaseResponse(BaseModel):
     status: str = Field(..., description="Task status: e.g., IN_PROGRESS, COMPLETED, FAILED")
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Extracted parameters mapping to ServiceSpecs")
     message_to_user: str = Field(..., description="Message to be displayed to the end user")
+    thinking: Optional[str] = Field(None, description="The internal reasoning or inner monologue of the AI")

@@ -1,7 +1,7 @@
 """Provides core functionalities for the router module."""
 from typing import Optional
 from pydantic import BaseModel, Field
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ChatMessage
 from app.graph.state import AgentState
 from app.core.logger import logger
 from app.core.vector_db import vdb
@@ -61,7 +61,7 @@ NEVER MAKE ASSUMPTIONS.
     try:
         # We use bind_tools to enforce structured output just like extractor_node
         llm_with_tools = llm_engine.bind_tools([IntentClassification])
-        response = llm_with_tools.invoke([SystemMessage(content=system_prompt)] + messages)
+        response = llm_with_tools.invoke([SystemMessage(content=system_prompt), ChatMessage(role="control", content="thinking")] + messages)
         
         if hasattr(response, 'tool_calls') and len(response.tool_calls) > 0:
             args = response.tool_calls[0].get("args", {})

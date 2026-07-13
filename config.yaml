@@ -1,6 +1,6 @@
 llm:
   mode: "ollama" # "ollama" or "gpt-oss"
-  ollama_model: "gemma4:e4b"
+  ollama_model: "gemma4:31b-cloud"
   gpt_oss_base_url: "http://gpt-oss-endpoint/v1"
   gpt_oss_api_key: "dummy-key"
   temperature: 0.0
