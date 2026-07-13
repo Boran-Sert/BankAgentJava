@@ -1,6 +1,8 @@
 spring:
   application:
     name: bank-agent-demo
+  profiles:
+    active: dev
 
 app:
   use-mock-db: ${USE_MOCK_DB:true}

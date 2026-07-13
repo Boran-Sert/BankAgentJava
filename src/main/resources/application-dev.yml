@@ -1,0 +1,13 @@
+app:
+  llm:
+    provider: openai # Mocking the real GPT-OSS 120b endpoint via OpenAI spec
+  use-mock-db: true
+
+langchain4j:
+  open-ai:
+    chat-model:
+      # Pointing the standard OpenAI driver to Ollama's local mock endpoint
+      base-url: http://localhost:11434/v1
+      api-key: ollama
+      model-name: gemma4:31b-cloud
+      temperature: 0.0
