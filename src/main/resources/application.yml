@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: bank-agent-demo
+
+app:
+  use-mock-db: ${USE_MOCK_DB:true}
+  # "ollama" or "openai" or "embedded"
+  llm:
+    provider: ${LLM_PROVIDER:ollama}
+
+langchain4j:
+  ollama:
+    chat-model:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      model-name: ${OLLAMA_MODEL_NAME:gemma4:31b-cloud}
+      temperature: 0.0
+
+  open-ai:
+    chat-model:
+      base-url: ${OPENAI_BASE_URL:http://localhost:8080/v1}
+      api-key: ${OPENAI_API_KEY:dummy-key}
+      model-name: ${OPENAI_MODEL_NAME:gpt-oss-120b}
+      temperature: 0.0
