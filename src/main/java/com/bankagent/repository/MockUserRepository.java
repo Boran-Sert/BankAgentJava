@@ -17,19 +17,33 @@ public class MockUserRepository implements IUserRepository {
     public MockUserRepository() {
         // Mock data initialization
         Map<String, Account> accounts = new HashMap<>();
-        accounts.put("vadesiz", new Account(null, "TL Vadesiz Hesap", 15000.0, null, "TL"));
-        accounts.put("vadeli", new Account("1", "TL Vadeli Hesap", 20000.0, 35.0, "TL"));
-        accounts.put("vadeli2", new Account("2", "USD Vadeli Hesap", 20000.0, 35.0, "USD"));
+        // Vadesiz (Checking) Accounts
+        accounts.put("vadesiz_tl", new Account(null, "Maaş Hesabı (TL)", 18500.75, null, "TRY"));
+        accounts.put("vadesiz_tl", new Account(null, "Cari Hesap (TL)", 20000.75, null, "TRY"));
+        accounts.put("vadesiz_usd", new Account(null, "Yurtdışı Harcama (USD)", 1250.00, null, "USD"));
+        accounts.put("vadesiz_eur", new Account(null, "Avrupa Seyahat (EUR)", 450.50, null, "EUR"));
+
+        // Vadeli (Savings / Deposit) Accounts
+        accounts.put("vadeli_tl_32", new Account("1", "32 Günlük Vadeli (TL)", 150000.00, 42.5, "TRY"));
+        accounts.put("vadeli_tl_90", new Account("2", "90 Günlük Kur Korumalı (TL)", 500000.00, 35.0, "TRY"));
+        accounts.put("vadeli_usd_180", new Account("3", "6 Aylık Döviz Tevdiat (USD)", 25000.00, 3.5, "USD"));
+
+        // Yatırım / Altın
+        accounts.put("yatirim_altin", new Account("4", "Vadesiz Altın Hesabı", 125.4, null, "XAU")); // Gram altın
+        accounts.put("yatirim_fon", new Account("5", "A Tipi Hisse Senedi Fonu", 85000.00, null, "TRY"));
 
         List<Card> cards = Arrays.asList(
-            new Card(UUID.randomUUID().toString(), "4543 **** **** 9012", 15000.0, 2500.0),
-            new Card(UUID.randomUUID().toString(), "5521 **** **** 1098", 5000.0, 5000.0),
-            new Card(UUID.randomUUID().toString(), "4321 **** **** 3333", 20000.0, 0.0),
-            new Card(UUID.randomUUID().toString(), "5100 **** **** 6666", 10000.0, 850.50),
-            new Card(UUID.randomUUID().toString(), "4999 **** **** 9999", 3000.0, 1200.75)
+            // Kredi Kartları (Credit Cards)
+            new Card(UUID.randomUUID().toString(), "Platinum Visa - 4543 **** **** 9012", 150000.0, 12500.45),
+            new Card(UUID.randomUUID().toString(), "Miles&Smiles Mastercard - 5521 **** **** 1098", 200000.0, 45000.00),
+            new Card(UUID.randomUUID().toString(), "Öğrenci Genç Kart - 4321 **** **** 3333", 10000.0, 0.0),
+            new Card(UUID.randomUUID().toString(), "Sanal Kart (Online Alışveriş) - 5100 **** **** 6666", 5000.0, 850.50),
+            
+            // Banka Kartları (Debit Cards) - Genelde limit yerine bakiye olur ama modelde limit var.
+            new Card(UUID.randomUUID().toString(), "Maaş Banka Kartı (Troy) - 4999 **** **** 9999", 18500.75, 0.0)
         );
 
-        users.put("test_user_1", new User("test_user_1", "Test Kullanıcısı", cards, accounts));
+        users.put("test_user_1", new User("test_user_1", "Boran Sert", cards, accounts));
     }
 
     @Override

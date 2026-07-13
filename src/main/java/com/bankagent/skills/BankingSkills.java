@@ -65,16 +65,6 @@ public class BankingSkills {
         return result;
     }
 
-    @Tool("Kullanıcının sahip olduğu tüm hesapların türlerini, bakiye ve detaylarını listeler.")
-    public Map<String, Account> getAccountTypes() {
-        String userId = userIdProvider.getCurrentUserId();
-        User user = Optional.ofNullable(userRepository.getUser(userId))
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı bilgisi bulunamadı."));
-        
-        return Optional.ofNullable(user.getAccounts())
-                .orElse(Collections.emptyMap());
-    }
-
     @Tool("Belirli vadeli hesaplarındaki aylık faiz getirisini hesaplar ve döner.")
     public List<Map<String, Object>> calcMonthlyIncomeSavings(
             @P("Aylık faizi hesaplanacak vadeli hesabın benzersiz ID'lerinin listesi (örn: ['1', '2'])") List<String> accountIds) {

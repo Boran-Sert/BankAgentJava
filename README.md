@@ -11,9 +11,29 @@ Bu sistem, ana bankacılık uygulamasından bağımsız bir middleware olarak ç
 ### Neden Kendi Sistemimiz? (GPT'nin İçindeki Araçlardan Farkı)
 Eğer GPT-OSS 120B (veya başka bir model) doğrudan bankacılık sistemine bağlansaydı, modelin kendi içindeki "tool" (araç) ekosisteminin sınırlarına ve kapalı kutu güvenliğine hapsolurduk. Bizim mimarimizde ise **LLM sadece beyni temsil eder, elleri (araçları) ve kuralları Java Middleware yönetir.**
 
-1. **Sınırsız Tool Yazma Özgürlüğü:** Modelin kendi plugin/tool sınırlarına takılmadan, Java tarafında istediğimiz kadar `BankingSkills` (Banka Yetenekleri) yazabiliriz. Java'daki her bir `@Tool` anotasyonu, LLM'e otomatik olarak bir yetenek gibi sunulur. Sınır, bankanın kendi sistemleridir.
+1. **Sınırsız Tool Yazma Özgürlüğü:** Modelin kendi plugin/tool sınırlarına (örneğin GPT'nin kısıtlı plugin limitlerine) takılmadan, Java tarafında istediğimiz kadar `BankingSkills` yazabiliriz. Java'daki her bir `@Tool` anotasyonu, çalışma anında dinamik olarak JSON şemasına çevrilip LLM'e öğretilir. Eğer binlerce yetenek yazarsanız, Vektörel Veritabanı devreye girerek sadece kullanıcının sorusuyla eşleşen en alakalı 3-5 yeteneği modele gönderir. Böylece model boğulmaz ve yetenek havuzu kelimenin tam anlamıyla "Sınırsız" olur.
 2. **GPT-OSS 120B Mocking (Ollama):** Geliştirme (DEV) ortamında gerçek GPT-OSS 120B'nin maliyetlerinden ve gecikmelerinden kaçınmak için Ollama ile mükemmel bir mock (taklit) altyapısı kurulmuştur. Ollama, `/v1` endpoint'i üzerinden sanki gerçek bir OpenAI uyumlu uç noktaymış gibi davranır. Java kodumuz, gerçek sunucuya mı yoksa Ollama'ya mı bağlı olduğunu bile anlamadan kusursuz bir Tool Calling gerçekleştirir.
 3. **Güvenlik Çerçevesi (Guardrails):** LLM kendi kararlarıyla izinsiz bir fonksiyonu çalıştıramaz. Modelin döndüğü istekler, çalıştırılmadan hemen önce `GuardrailsService` kalkanına çarpar ve validasyondan geçer.
+
+
+---
+
+## 🧠 Gelişmiş Agent Mimari Bileşenleri
+
+Sistemi basit bir sohbet botundan ayırıp "Akıllı Asistan" yapan 2 kritik mimari bileşeni bulunur:
+
+### 1. Neden ChromaDB Kullanıyoruz? (Dinamik Tool & RAG)
+Banka sistemleri büyüdükçe binlerce işlem fonksiyonu ortaya çıkar (Kredi hesaplama, Döviz bozma, Fatura ödeme, EFT vb.). LLM'in hepsini tek seferde anlamaya çalışması hem sistemin çökmesine (Context Window aşımı) hem de halüsinasyon görmesine sebep olur.
+* **Çözüm:** Yazdığımız tüm yeni yetenekler (Skills) ve şirket dokümanları önce Vektör Formatına (Embeddings) çevrilip **ChromaDB**'ye kaydedilir.
+* **Nasıl Çalışır:** Kullanıcı "Faturamı nasıl öderim?" diye sorduğunda, sistem önce ChromaDB'ye gider ve semantik arama (anlam araması) yapar. Sadece "fatura ödeme" ile ilgili Java fonksiyonlarını (Tools) ve rehberleri çeker, ardından bunları LLM'in eline vererek "Al, bu aletleri kullanarak sorunu çöz" der. Bu sayede model her zaman hızlı, odaklı ve hatasız çalışır.
+
+### 2. Router ve Sub-Agent (Yönlendirici ve Alt Ajanlar)
+Yapay zeka asistanı tek bir devasa yapay zeka beyni olmak zorunda değildir. Bankacılık süreçlerinde hata payını sıfıra indirmek için görevler uzmanlara bölünmüştür:
+* **Router (Yönlendirici Şef):** Kullanıcının mesajı ilk geldiğinde, bunu karşılayan ana karar mekanizmasıdır. İsteğin genel bir sohbet mi (örn: "Nasılsın?"), bankacılık işlemi mi ("Bakiye göster"), yoksa bilgi sorgusu mu ("Kredi kartı faiz oranlarınız neler?") olduğuna karar verir.
+* **Sub-Agents (Alt Uzman Ajanlar):** Router'ın kararına göre istek ilgili Uzman Ajan'a yönlendirilir.
+    * *Finansal İşlem Ajanı:* Sadece para hareketleri ve veritabanı okumaları (Tools) konusunda uzmandır, hata yapmaz.
+    * *Müşteri Destek Ajanı:* Sadece prosedürleri anlatır, kesinlikle hesaba dokunma yetkisi (Tool) verilmez.
+* **Neden Kullanılır?** Dev bir modele "Hem sohbet et, hem işlem yap, hem kural hatırla" demek yerine görevler ayrıştırılır. Güvenlik ve Sıfır Hata prensibi bu Sub-Agent yönlendirme (Routing) mimarisi ile sağlanır.
 
 ---
 
