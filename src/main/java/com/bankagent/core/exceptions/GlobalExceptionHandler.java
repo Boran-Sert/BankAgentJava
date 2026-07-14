@@ -1,3 +1,6 @@
+/**
+ * Proje genelindeki tüm istisnaları (Exception) tek bir noktada yakalayıp güvenli API yanıtlarına dönüştürür.
+ */
 package com.bankagent.core.exceptions;
 
 import com.bankagent.core.contracts.BaseResponse;

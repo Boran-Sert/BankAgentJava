@@ -1,3 +1,6 @@
+/**
+ * Java metotlarını (@Tool) ayrıştırarak yapay zekanın anlayabileceği JSON şemalarına (JSON Schema) dönüştürür.
+ */
 package com.bankagent.generator;
 
 import com.bankagent.llm.ILLMProvider;

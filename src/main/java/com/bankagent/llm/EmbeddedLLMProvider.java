@@ -1,3 +1,6 @@
+/**
+ * Sistemin içine gömülü (embedded) bir dil modeli çalıştırmak için kullanılan altyapı sağlayıcısıdır.
+ */
 package com.bankagent.llm;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;

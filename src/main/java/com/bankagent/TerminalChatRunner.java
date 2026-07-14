@@ -1,3 +1,6 @@
+/**
+ * Kullanıcının yapay zeka asistanıyla terminal (konsol) üzerinden sohbet etmesini sağlayan arayüzdür.
+ */
 package com.bankagent;
 
 import com.bankagent.core.contracts.BaseResponse;

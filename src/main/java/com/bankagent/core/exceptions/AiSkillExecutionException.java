@@ -1,3 +1,6 @@
+/**
+ * Ajanların dış dünyayla bağlantılı araçları (tools) çalıştırırken karşılaştığı veri veya sistem hatalarıdır.
+ */
 package com.bankagent.core.exceptions;
 
 public class AiSkillExecutionException extends AiAgentException {

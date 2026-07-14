@@ -1,3 +1,6 @@
+/**
+ * Geliştirme (DEV) ortamında sistemi test edebilmek için sabit bir sahte (mock) kullanıcı kimliği sağlar.
+ */
 package com.bankagent.core.security;
 
 import org.springframework.context.annotation.Profile;

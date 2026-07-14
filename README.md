@@ -27,13 +27,20 @@ Banka sistemleri büyüdükçe binlerce işlem fonksiyonu ortaya çıkar (Kredi 
 * **Çözüm:** Yazdığımız tüm yeni yetenekler (Skills) ve şirket dokümanları önce Vektör Formatına (Embeddings) çevrilip **ChromaDB**'ye kaydedilir.
 * **Nasıl Çalışır:** Kullanıcı "Faturamı nasıl öderim?" diye sorduğunda, sistem önce ChromaDB'ye gider ve semantik arama (anlam araması) yapar. Sadece "fatura ödeme" ile ilgili Java fonksiyonlarını (Tools) ve rehberleri çeker, ardından bunları LLM'in eline vererek "Al, bu aletleri kullanarak sorunu çöz" der. Bu sayede model her zaman hızlı, odaklı ve hatasız çalışır.
 
-### 2. Router ve Sub-Agent (Yönlendirici ve Alt Ajanlar)
-Yapay zeka asistanı tek bir devasa yapay zeka beyni olmak zorunda değildir. Bankacılık süreçlerinde hata payını sıfıra indirmek için görevler uzmanlara bölünmüştür:
-* **Router (Yönlendirici Şef):** Kullanıcının mesajı ilk geldiğinde, bunu karşılayan ana karar mekanizmasıdır. İsteğin genel bir sohbet mi (örn: "Nasılsın?"), bankacılık işlemi mi ("Bakiye göster"), yoksa bilgi sorgusu mu ("Kredi kartı faiz oranlarınız neler?") olduğuna karar verir.
-* **Sub-Agents (Alt Uzman Ajanlar):** Router'ın kararına göre istek ilgili Uzman Ajan'a yönlendirilir.
-    * *Finansal İşlem Ajanı:* Sadece para hareketleri ve veritabanı okumaları (Tools) konusunda uzmandır, hata yapmaz.
-    * *Müşteri Destek Ajanı:* Sadece prosedürleri anlatır, kesinlikle hesaba dokunma yetkisi (Tool) verilmez.
-* **Neden Kullanılır?** Dev bir modele "Hem sohbet et, hem işlem yap, hem kural hatırla" demek yerine görevler ayrıştırılır. Güvenlik ve Sıfır Hata prensibi bu Sub-Agent yönlendirme (Routing) mimarisi ile sağlanır.
+### 2. Multi-Agent Strategy Mimarisi (Router ve Sub-Agents)
+Yapay zeka asistanı tek bir devasa yapay zeka beyni olmak zorunda değildir. Bankacılık süreçlerinde hata payını sıfıra indirmek ve esnekliği artırmak için sistem **Strategy Pattern (Strateji Tasarım Deseni)** kullanılarak uzman ajanlara bölünmüştür:
+* **Router (Yönlendirici Şef - IRouterAgent):** Kullanıcının mesajı ilk geldiğinde, bunu karşılayan ana karar mekanizmasıdır. İsteğin genel bir sohbet mi (`GENERAL`), bankacılık işlemi mi (`FINANCIAL`), yoksa bilgi sorgusu mu (`SUPPORT`) olduğuna karar verir.
+* **Sub-Agents (Alt Uzman Ajanlar):** Router'ın kararına göre istek ilgili uzman ajana (Strategy) yönlendirilir.
+    * *IFinancialAgent (Finansal İşlem Ajanı):* Sadece para hareketleri ve veritabanı okumaları (Tools) konusunda uzmandır. Müşteriyle kesinlikle sohbet etmez. İşlemleri yapar ve sonucu sadece **yapılandırılmış veri (Structured POJO/JSON)** olarak döner.
+    * *ICustomerSupportAgent (Müşteri Destek Ajanı):* Finansal ajanlardan gelen ham JSON verisini (`contextData`) alır ve müşteriye en nazik, insan dilinde cevabı üretir. Finansal araçlara veya hesaplara erişim yetkisi (Tool) yoktur. Sadece iletişimden sorumludur.
+* **Neden Kullanılır?** Dev bir modele "Hem sohbet et, hem işlem yap, hem kural hatırla" demek yerine görevler ayrıştırılır. Güvenlik, sıfır halüsinasyon ve Sıfır Hata prensibi bu Sub-Agent yönlendirme mimarisi ile sağlanır. Ayrıca sisteme yeni bir ajan eklemek (Örn: Şikayet Ajanı) sadece yeni bir `IAgentWorkflowStrategy` sınıfı eklemek kadar basittir.
+
+### 3. Structured Output & Hallucination Koruması (FinancialDataEntry)
+Yapay zekanın "Tool" çıktılarını yorumlarken gevezelik yapmasını veya yanlış formatlar üretmesini (Hallucination) engellemek için **Java Tipleriyle Zorlama (Type-Safety)** uygulanmıştır.
+Finansal ajan doğrudan bir Java Objesi (`FinancialResult` ve `FinancialDataEntry` listesi) döner. LangChain4j arka planda bu sınıfları JSON Schema'ya çevirerek LLM'e dayatır. Bu sayede iç içe geçmiş (nested) Generic Type hatalarının da (ClassCastException) önüne geçilmiş profesyonel bir veri akışı sağlanmıştır.
+
+### 4. İş Akışı Şeffaflığı (WorkflowLogger)
+Sistemin kapalı bir kutu (black-box) olmaktan çıkıp, tüm akışın izlenebilmesi için `WorkflowLogger` geliştirilmiştir. Kullanıcı terminalden bir istek yaptığında arka planda Router'ın hangi kararı verdiği, Finansal Ajan'ın hangi JSON verisini ürettiği ve Destek Ajanı'nın bunu nasıl devraldığı adım adım SLF4J (Spring Boot) logları ile konsola yazdırılır.
 
 ---
 

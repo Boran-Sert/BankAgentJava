@@ -1,3 +1,6 @@
+/**
+ * Güvenlik kuralları (Guardrails) ihlal edildiğinde uygulamanın fırlattığı özel hata sınıfıdır.
+ */
 package com.bankagent.core.exceptions;
 
 public class AiGuardrailException extends AiAgentException {

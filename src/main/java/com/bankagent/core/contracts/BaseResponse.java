@@ -1,3 +1,6 @@
+/**
+ * Ajanların ve sistemin dışarıya döndüğü cevapları standart bir API formatına oturtan veri modelidir.
+ */
 package com.bankagent.core.contracts;
 
 import java.util.Map;

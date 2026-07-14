@@ -1,3 +1,6 @@
+/**
+ * Dış uygulamaların yapay zeka ajanlarına HTTP REST üzerinden erişmesini sağlayan denetleyicidir (Controller).
+ */
 package com.bankagent.api;
 
 import com.bankagent.core.contracts.BaseResponse;

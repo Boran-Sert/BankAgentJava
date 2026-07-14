@@ -1,3 +1,6 @@
+/**
+ * Yapay zeka ajanlarının çalışması veya karar vermesi sırasında oluşan temel hataları temsil eder.
+ */
 package com.bankagent.core.exceptions;
 
 public class AiAgentException extends RuntimeException {

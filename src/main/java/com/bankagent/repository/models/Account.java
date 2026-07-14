@@ -1,3 +1,6 @@
+/**
+ * Müşterinin banka hesaplarını (Vadesiz, Vadeli vb.) ve bakiye bilgilerini temsil eden veri modelidir.
+ */
 package com.bankagent.repository.models;
 
 public class Account {

@@ -1,3 +1,6 @@
+/**
+ * Finansal Ajanın bankacılık işlemlerini (Havale, Kredi Başvurusu vb.) yapmasını sağlayan "Araçlar (Tools)" koleksiyonudur.
+ */
 package com.bankagent.skills;
 
 import com.bankagent.core.exceptions.AiSkillExecutionException;

@@ -1,3 +1,6 @@
+/**
+ * ChromaDB vektörel veritabanına bağlanarak metin aramalarını ve yapay zeka hafıza yönetimini üstlenen servistir.
+ */
 package com.bankagent.vectordb;
 
 import dev.langchain4j.data.document.Metadata;

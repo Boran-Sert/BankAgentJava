@@ -1,3 +1,6 @@
+/**
+ * Farklı yapay zeka modellerinin (Ollama, OpenAI vb.) sisteme entegre edilebilmesi için bir şablon sağlar.
+ */
 package com.bankagent.llm;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;

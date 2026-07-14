@@ -1,3 +1,6 @@
+/**
+ * Sistemdeki tüm BankingSkills araçlarını bellekte (memory) ve veritabanında kayda alarak erişime açar.
+ */
 package com.bankagent.registry;
 
 import com.bankagent.core.exceptions.AiAgentException;

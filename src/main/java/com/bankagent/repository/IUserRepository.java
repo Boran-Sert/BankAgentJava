@@ -1,3 +1,6 @@
+/**
+ * Kullanıcı ve hesap verilerine ulaşmak için kullanılan veri tabanı erişim katmanının (Repository) arayüzüdür.
+ */
 package com.bankagent.repository;
 
 import com.bankagent.repository.models.Card;

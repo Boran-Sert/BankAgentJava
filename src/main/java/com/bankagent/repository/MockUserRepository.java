@@ -1,3 +1,6 @@
+/**
+ * Veritabanı (DB) bağlantısı olmadan sistemi test etmek için kullanılan sahte veritabanı simülasyonudur.
+ */
 package com.bankagent.repository;
 
 import com.bankagent.repository.models.Account;

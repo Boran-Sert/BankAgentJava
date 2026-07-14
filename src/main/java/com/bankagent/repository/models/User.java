@@ -1,3 +1,6 @@
+/**
+ * Sisteme kayıtlı olan müşterinin profil bilgilerini (Ad, Soyad, TC No vb.) temsil eden ana veri modelidir.
+ */
 package com.bankagent.repository.models;
 
 import java.util.List;

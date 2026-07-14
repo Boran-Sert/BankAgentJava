@@ -1,3 +1,6 @@
+/**
+ * Yapay zekadan gelen komutları ve cevapları filtreleyerek banka güvenlik kurallarını uygulayan kalkandır.
+ */
 package com.bankagent.guardrails;
 
 import com.bankagent.core.exceptions.AiGuardrailException;

@@ -1,3 +1,6 @@
+/**
+ * Uygulamanın genel Jackson ve Spring Bean yapılandırmalarını (konfigürasyonlarını) barındırır.
+ */
 package com.bankagent.core.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;

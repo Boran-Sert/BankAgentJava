@@ -1,3 +1,6 @@
+/**
+ * Canlı (PROD) ortamda Spring Security veya JWT üzerinden gerçek kullanıcının kimliğini (ID) çeker.
+ */
 package com.bankagent.core.security;
 
 import com.bankagent.core.exceptions.AiAgentException;

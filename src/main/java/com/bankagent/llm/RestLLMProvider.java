@@ -1,3 +1,6 @@
+/**
+ * Dışarıdaki (Bulut tabanlı) LLM API'lerine HTTP REST istekleriyle bağlanmayı sağlayan modüldür.
+ */
 package com.bankagent.llm;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;

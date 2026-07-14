@@ -1,3 +1,6 @@
+/**
+ * Müşteriye ait kredi kartı, banka kartı gibi kart bilgilerini temsil eden veri modelidir.
+ */
 package com.bankagent.repository.models;
 
 public class Card {

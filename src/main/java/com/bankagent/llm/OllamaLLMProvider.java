@@ -1,3 +1,6 @@
+/**
+ * Ollama altyapısı kullanarak yerel yapay zeka modelleriyle bağlantı kuran LLM entegrasyonudur.
+ */
 package com.bankagent.llm;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;

@@ -1,3 +1,6 @@
+/**
+ * Spring Boot uygulamasını başlatan ana giriş (main) sınıfıdır.
+ */
 package com.bankagent;
 
 import org.springframework.boot.SpringApplication;

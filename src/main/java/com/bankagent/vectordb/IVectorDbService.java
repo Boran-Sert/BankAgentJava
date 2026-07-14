@@ -1,3 +1,6 @@
+/**
+ * Sistemin kullanabileceği farklı vektörel veritabanları (Chroma, Pinecone vb.) için standart bir arayüz sağlar.
+ */
 package com.bankagent.vectordb;
 
 import dev.langchain4j.data.segment.TextSegment;
