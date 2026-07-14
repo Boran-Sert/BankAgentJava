@@ -30,7 +30,10 @@ public class MockUserRepository implements IUserRepository {
 
         // Yatırım / Altın
         accounts.put("yatirim_altin", new Account("4", "Vadesiz Altın Hesabı", 125.4, null, "XAU")); // Gram altın
-        accounts.put("yatirim_fon", new Account("5", "A Tipi Hisse Senedi Fonu", 85000.00, null, "TRY"));
+        accounts.put("yatirim_fon_afa", new Account("5", "AFA - Ak Portföy Amerika Yabancı Hisse Senedi Fonu", 25000.00, null, "TRY"));
+        accounts.put("yatirim_fon_yas", new Account("6", "YAS - Yapı Kredi Portföy Koç Holding İştirakleri Fonu", 35000.00, null, "TRY"));
+        accounts.put("yatirim_fon_ti3", new Account("7", "TI3 - İş Portföy İş Bankası İştirakleri Endeksi Fonu", 15000.00, null, "TRY"));
+        accounts.put("yatirim_fon_tte", new Account("8", "TTE - İş Portföy BIST Teknoloji Ağırlık Sınırlamalı Endeksi Fonu", 25000.00, null, "TRY"));
 
         List<Card> cards = Arrays.asList(
             // Kredi Kartları (Credit Cards)

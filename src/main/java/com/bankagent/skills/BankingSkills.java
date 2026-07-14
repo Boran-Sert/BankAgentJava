@@ -29,11 +29,34 @@ public class BankingSkills {
         this.userIdProvider = userIdProvider;
     }
 
+    // --- TEMEL YARDIMCI METOTLAR (BASE HELPERS) ---
+    private User getCurrentUser() {
+        String userId = userIdProvider.getCurrentUserId();
+        return Optional.ofNullable(userRepository.getUser(userId))
+                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı bilgisi bulunamadı."));
+    }
+
+    private List<Card> getAllCards() {
+        String userId = userIdProvider.getCurrentUserId();
+        return Optional.ofNullable(userRepository.getUserCards(userId))
+                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı kartları bulunamadı."));
+    }
+
+    private Map<String, Account> getAllAccounts() {
+        return Optional.ofNullable(getCurrentUser().getAccounts())
+                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı hesabı bulunamadı."));
+    }
+
+    private List<Account> getForeignCurrencyAccounts() {
+        return getAllAccounts().values().stream()
+                .filter(acc -> !"TRY".equalsIgnoreCase(acc.getCurrency()))
+                .collect(Collectors.toList());
+    }
+    // ----------------------------------------------
+
     @Tool("Kullanıcının hesap bakiyesini ve kredi kartı borcunu döner. 'Hesabımda ne kadar para var?' gibi sorularda kullanılır.")
     public List<Map<String, Object>> getBalance() {
-        String userId = userIdProvider.getCurrentUserId();
-        List<Card> cards = Optional.ofNullable(userRepository.getUserCards(userId))
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı kartları bulunamadı."));
+        List<Card> cards = getAllCards();
         
         List<Map<String, Object>> result = cards.stream().map(card -> {
             Map<String, Object> cardData = new HashMap<>();
@@ -43,9 +66,10 @@ public class BankingSkills {
             return cardData;
         }).collect(Collectors.toList());
         
-        log.debug("getBalance executed for user: {}", userId);
+        log.debug("getBalance executed for user: {}", userIdProvider.getCurrentUserId());
         return result;
     }
+
 // ------------------------------------ GERÇEK BİR TOOL OLARAK KULLANILMAYACAK SADECE TEST AMAÇLI --------------------------------------
     @Tool("Kredi kartı borcunu öder veya karta para yatırır.")
     public Map<String, Object> makePayment(
@@ -67,16 +91,12 @@ public class BankingSkills {
         return result;
     }
     // ------------------------------------ GERÇEK BİR TOOL OLARAK KULLANILMAYACAK SADECE TEST AMAÇLI --------------------------------------
+
     @Tool("Belirli vadeli hesaplarındaki aylık faiz getirisini hesaplar ve döner.")
     public List<Map<String, Object>> calcMonthlyIncomeSavings(
             @P("Aylık faizi hesaplanacak vadeli hesabın benzersiz ID'lerinin listesi (örn: ['1', '2'])") List<String> accountIds) {
         
-        String userId = userIdProvider.getCurrentUserId();
-        User user = Optional.ofNullable(userRepository.getUser(userId))
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı bilgisi bulunamadı."));
-
-        Map<String, Account> accounts = Optional.ofNullable(user.getAccounts())
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı hesabı bulunamadı."));
+        Map<String, Account> accounts = getAllAccounts();
 
         List<Map<String, Object>> results = accountIds.stream().map(accId -> {
             Optional<Account> targetAccount = accounts.entrySet().stream()
@@ -102,18 +122,13 @@ public class BankingSkills {
             return res;
         }).collect(Collectors.toList());
 
-        log.debug("calcMonthlyIncomeSavings executed for user: {}", userId);
+        log.debug("calcMonthlyIncomeSavings executed for user: {}", userIdProvider.getCurrentUserId());
         return results;
     }
 
     @Tool("Kullanıcının sahip olduğu hesapların sadece isimlerini ve ID'lerini güvenli şekilde döner. Hesap belirsizliği durumunda kullanılır.")
     public List<Map<String, Object>> getUserAccountOptions() {
-        String userId = userIdProvider.getCurrentUserId();
-        User user = Optional.ofNullable(userRepository.getUser(userId))
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı bilgisi bulunamadı."));
-
-        Map<String, Account> accounts = Optional.ofNullable(user.getAccounts())
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı hesabı bulunamadı."));
+        Map<String, Account> accounts = getAllAccounts();
 
         List<Map<String, Object>> safeAccounts = accounts.entrySet().stream().map(entry -> {
             Account acc = entry.getValue();
@@ -125,15 +140,13 @@ public class BankingSkills {
             return safeAcc;
         }).collect(Collectors.toList());
 
-        log.debug("getUserAccountOptions executed for user: {}", userId);
+        log.debug("getUserAccountOptions executed for user: {}", userIdProvider.getCurrentUserId());
         return safeAccounts;
     }
 
     @Tool("Kullanıcının kredi kartlarının maskelenmiş (sadece son 4 hanesi ve kart ID'si) listesini döner.")
     public List<Map<String, Object>> getCreditCardOptions() {
-        String userId = userIdProvider.getCurrentUserId();
-        List<Card> cards = Optional.ofNullable(userRepository.getUserCards(userId))
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı kartları bulunamadı."));
+        List<Card> cards = getAllCards();
 
         List<Map<String, Object>> safeCards = cards.stream().map(card -> {
             Map<String, Object> safeCard = new HashMap<>();
@@ -145,25 +158,27 @@ public class BankingSkills {
             return safeCard;
         }).collect(Collectors.toList());
 
-        log.debug("getCreditCardOptions executed for user: {}", userId);
+        log.debug("getCreditCardOptions executed for user: {}", userIdProvider.getCurrentUserId());
         return safeCards;
     }
 
     @Tool("Kullanıcının kredi başvurusunu alır. Sadece talep edilen kredi tutarına ihtiyaç vardır. Çıktı olarak mutlaka başvuruda kullanılan tüm bilgileri içeren (TC, Ad, Doğum Tarihi, Meslek, Gelir, Tutar vb.) bir tablo oluştur.")
     public String applyForLoan(
             @P("Talep Edilen Kredi Tutarı") Double requestedAmount) {
-        Map<String, Object> profile = getUserProfile();
+        
+        User user = getCurrentUser();
 
-        String filledTc = (String) profile.get("tc_no");
-        String filledName = (String) profile.get("name");
-        String filledBirth = (String) profile.get("birth_date");
-        String filledProfession = (String) profile.get("profession");
-        Double filledIncome = profile.get("monthly_income") instanceof Number ?
-                ((Number)profile.get("monthly_income")).doubleValue() : null;
+        String filledTc = user.getTcNo();
+        String filledName = user.getName();
+        String filledBirth = user.getBirthDate();
+        String filledProfession = user.getProfession();
+        Double filledIncome = user.getMonthlyIncome();
+        
         if (filledTc == null || filledName == null || filledBirth == null ||
                 filledIncome == null || requestedAmount == null) {
             throw new AiSkillExecutionException("Kredi başvurusu için kullanıcı profilindeki bilgiler eksik.");
         }
+        
         Map<String,Object> payload = new HashMap<>();
         payload.put("tcNo", filledTc);
         payload.put("fullName", filledName);
@@ -181,10 +196,10 @@ public class BankingSkills {
             throw new AiSkillExecutionException("Başvuru JSON'a dönüştürülürken hata: " + e.getMessage(), e);
         }
     }
-    @Tool("Kullanıcının kişisel bilgilerini getirir.")public Map<String, Object> getUserProfile() {
-        String userId = userIdProvider.getCurrentUserId();
-        User user = Optional.ofNullable(userRepository.getUser(userId))
-                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı bilgisi bulunamadı."));
+
+    @Tool("Kullanıcının kişisel bilgilerini getirir.")
+    public Map<String, Object> getUserProfile() {
+        User user = getCurrentUser();
 
         Map<String, Object> profile = new HashMap<>();
         profile.put("name", user.getName());
@@ -193,7 +208,83 @@ public class BankingSkills {
         profile.put("profession", user.getProfession());
         profile.put("monthly_income", user.getMonthlyIncome());
 
-        log.debug("getUserProfile executed for user: {}", userId);
+        log.debug("getUserProfile executed for user: {}", userIdProvider.getCurrentUserId());
         return profile;
+    }
+
+    @Tool("Kullanıcının yatırım fonlarının getirisini hesaplar. Kullanıcı 'tüm fonlarım' derse fon kodunu boş liste olarak gönderebilirsiniz.")
+    public Map<String, Object> calculateInvestmentReturns(
+            @P("Yatırım fonlarının kodları. Kullanıcı tüm fonları kastettiyse boş bırakılabilir (örn: ['AFA'])") List<String> fundCodes,
+            @P("Kaç günlük getiri hesaplanacağı") int days) {
+        
+        User user = getCurrentUser();
+        Map<String, Account> allAccounts = getAllAccounts();
+        Map<String, Object> investmentReturns = new HashMap<>();
+        
+        if (days <= 0) {
+            throw new AiSkillExecutionException("Yatırım getirisi hesaplamak için geçerli bir gün sayısı gereklidir.");
+        }
+        
+        // Kullanıcının sahip olduğu yatırım fonu hesaplarını filtrele (isimleri 'Fonu' kelimesi içeriyorsa)
+        List<Account> userFundAccounts = allAccounts.values().stream()
+                .filter(acc -> acc.getName() != null && acc.getName().contains("Fonu"))
+                .toList();
+        
+        if (fundCodes == null || fundCodes.isEmpty()) {
+            // Fon kodu belirtilmemişse kullanıcının sahip olduğu tüm fonları dahil et
+            fundCodes = userFundAccounts.stream()
+                    .map(acc -> acc.getName().split(" ")[0]) // Örn: "AFA - Ak Portföy..." -> "AFA"
+                    .collect(Collectors.toList());
+        }
+        
+        List<Map<String, Object>> fundResults = new ArrayList<>();
+        double totalProfit = 0.0;
+        double actualTotalInvestment = 0.0;
+        
+        // Mock getiri hesaplaması (gerçek hayatta banka veya borsa API'sinden çekilir)
+        for (String fundCode : fundCodes) {
+            // Kullanıcının hesapları içinde bu fonu ara
+            Optional<Account> fundAccountOpt = userFundAccounts.stream()
+                    .filter(acc -> acc.getName().startsWith(fundCode))
+                    .findFirst();
+            
+            if (fundAccountOpt.isEmpty()) {
+                continue; // Kullanıcının böyle bir fonu yoksa atla
+            }
+            
+            Account fundAccount = fundAccountOpt.get();
+            double investedAmount = fundAccount.getBalance();
+            actualTotalInvestment += investedAmount;
+            
+            Map<String, Object> fundData = new HashMap<>();
+            fundData.put("fund_code", fundCode);
+            
+            // Random mock interest rate (örneğin günlük %0.05 - %0.3 arası rastgele bir getiri)
+            double dailyRate = 0.0005 + (Math.random() * 0.0025); 
+            double totalRate = dailyRate * days;
+            double profit = investedAmount * totalRate;
+            
+            fundData.put("invested_amount", Math.round(investedAmount * 100.0) / 100.0);
+            fundData.put("profit", Math.round(profit * 100.0) / 100.0);
+            fundData.put("total_amount", Math.round((investedAmount + profit) * 100.0) / 100.0);
+            fundData.put("rate_of_return_percentage", Math.round(totalRate * 10000.0) / 100.0);
+            
+            totalProfit += profit;
+            fundResults.add(fundData);
+        }
+        
+        if (fundResults.isEmpty()) {
+            throw new AiSkillExecutionException("Belirtilen fon kodlarına ait yatırım hesabı bulunamadı.");
+        }
+        
+        investmentReturns.put("user_name", user.getName());
+        investmentReturns.put("days", days);
+        investmentReturns.put("funds", fundResults);
+        investmentReturns.put("total_invested", Math.round(actualTotalInvestment * 100.0) / 100.0);
+        investmentReturns.put("total_profit", Math.round(totalProfit * 100.0) / 100.0);
+        investmentReturns.put("final_total", Math.round((actualTotalInvestment + totalProfit) * 100.0) / 100.0);
+        
+        log.debug("calculateInvestmentReturns executed for user: {}", userIdProvider.getCurrentUserId());
+        return investmentReturns;
     }
 }

@@ -48,6 +48,26 @@ Bir Yapay Zeka sistemini doğrudan banka veritabanına açmak büyük bir güven
 
 ---
 
+## 🏗️ Base Helper & Sub-Tool Mimarisi (DRY Prensibi)
+
+Sistemdeki yapay zeka araçları (Tools), verimliliği artırmak ve kod tekrarını (code duplication) önlemek amacıyla **Base (Temel) Metotlar** ve **Sub-Tools (Alt Araçlar)** şeklinde modüler olarak yapılandırılmıştır.
+
+### Eski Sistemin Dezavantajları
+Eski yapıda, her bir AI aracı (örneğin bakiye sorgulama, kredi başvurusu, hesap listeleme vb.) bağımsız çalışırdı. Her biri kendi içinde kullanıcı ID'sini alır, veritabanına bağlanır, veriyi çeker ve boş (`null`) kontrollerini kendisi yapardı.
+- Aynı veritabanı sorguları ve hata kontrolleri defalarca tekrarlanırdı.
+- Yeni bir araç (Tool) eklemek zahmetliydi ve geliştirici hata yapma riski (örn: yetki kontrolünün unutulması) taşırdı.
+- Kredi başvurusu gibi karmaşık araçlar, veriyi işlemek için kendi içlerinde Map ve JSON dönüştürmeleri yapmak zorunda kalıyordu (Type-safety eksikliği).
+
+### Yeni Mimari ve Avantajları
+Yeni sistemde, veritabanı işlemleri ve doğrulama adımları **Base Helper** (Temel Yardımcı) metotlarda (örneğin: `getCurrentUser()`, `getAllAccounts()`, `getAllCards()`) merkezileştirilmiştir. Yapay zekanın erişebildiği **Sub-Tool'lar** (Alt Araçlar) ise doğrudan veritabanına gitmek yerine bu temel metotları çağırır.
+
+* **Kod Tekrarının Önlenmesi (DRY):** Veritabanı bağlantısı, kullanıcı doğrulama ve hata (`Exception`) yönetimi tek bir merkezden yürütülür. Alt toollar sadece iş mantığına odaklanır.
+* **Güvenlik ve Type-Safety:** Alt toollar, karmaşık JSON/Map dönüşümleri yapmak yerine doğrudan Base metotların döndüğü güvenli (Type-Safe) Java objelerini (örn: `User`, `Account` nesnelerini) kullanır. Bu sayede çalışma zamanı (Runtime) hataları en aza iner.
+* **LLM Optimizasyonu (Token Tasarrufu):** Yapay zekaya "Tüm hesap veritabanını getir" gibi aşırı genel (Base) araçlar sunulmaz. Bunun yerine AI sadece spesifik iş yapan alt araçları (örn: `getBalance`) kullanır. Veriler arka planda Java kodu ile temizce toparlanıp sadece LLM'in ihtiyacı olan kadarı sunulur. Bu, modelin kafasının karışmasını engeller ve token israfını bitirir.
+* **Hızlı Genişletilebilirlik:** Sisteme yeni bir yetenek (örn: Döviz Kuru Hesaplayıcı) eklenmek istendiğinde, yapılması gereken tek şey mevcut Base metotlardan veriyi çekip sadece ufak bir işleme (hesaplama) tabi tutmaktır. Veri çekme ve güvenlik mantığı asla baştan yazılmaz.
+
+---
+
 ## 🔄 Süreç Nasıl İşliyor? (Mimari Akış)
 
 Bir istek geldiğinde arka planda çalışan süreç adım adım şu şekildedir:
