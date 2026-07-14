@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
-
+// BİR DATABASE MOCKLAMAK İÇİN YAPILMIŞTIR
 @Repository
 @ConditionalOnProperty(name = "app.use-mock-db", havingValue = "true", matchIfMissing = true)
 public class MockUserRepository implements IUserRepository {
@@ -43,7 +43,7 @@ public class MockUserRepository implements IUserRepository {
             new Card(UUID.randomUUID().toString(), "Maaş Banka Kartı (Troy) - 4999 **** **** 9999", 18500.75, 0.0)
         );
 
-        users.put("test_user_1", new User("test_user_1", "Boran Sert", cards, accounts));
+        users.put("test_user_1", new User("test_user_1", "Boran Sert", "12345678901", "1990-05-15", "Yazılım Mühendisi", 85000.0, cards, accounts));
     }
 
     @Override

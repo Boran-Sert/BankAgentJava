@@ -6,14 +6,22 @@ import java.util.Map;
 public class User {
     private String userId;
     private String name;
+    private String tcNo;
+    private String birthDate;
+    private String profession;
+    private Double monthlyIncome;
     private List<Card> cards;
     private Map<String, Account> accounts;
 
     public User() {}
 
-    public User(String userId, String name, List<Card> cards, Map<String, Account> accounts) {
+    public User(String userId, String name, String tcNo, String birthDate, String profession, Double monthlyIncome, List<Card> cards, Map<String, Account> accounts) {
         this.userId = userId;
         this.name = name;
+        this.tcNo = tcNo;
+        this.birthDate = birthDate;
+        this.profession = profession;
+        this.monthlyIncome = monthlyIncome;
         this.cards = cards;
         this.accounts = accounts;
     }
@@ -29,4 +37,16 @@ public class User {
     
     public Map<String, Account> getAccounts() { return accounts; }
     public void setAccounts(Map<String, Account> accounts) { this.accounts = accounts; }
+
+    public String getTcNo() { return tcNo; }
+    public void setTcNo(String tcNo) { this.tcNo = tcNo; }
+
+    public String getBirthDate() { return birthDate; }
+    public void setBirthDate(String birthDate) { this.birthDate = birthDate; }
+
+    public String getProfession() { return profession; }
+    public void setProfession(String profession) { this.profession = profession; }
+
+    public Double getMonthlyIncome() { return monthlyIncome; }
+    public void setMonthlyIncome(Double monthlyIncome) { this.monthlyIncome = monthlyIncome; }
 }

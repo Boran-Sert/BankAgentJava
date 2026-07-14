@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @Component
 public class BankingSkills {
@@ -44,7 +46,7 @@ public class BankingSkills {
         log.debug("getBalance executed for user: {}", userId);
         return result;
     }
-
+// ------------------------------------ GERÇEK BİR TOOL OLARAK KULLANILMAYACAK SADECE TEST AMAÇLI --------------------------------------
     @Tool("Kredi kartı borcunu öder veya karta para yatırır.")
     public Map<String, Object> makePayment(
             @P("Kredi Kartı Numarası (Son 4 hanesi veya ilk 4 hanesi veya tam numarası olabilir)") String cardId,
@@ -64,7 +66,7 @@ public class BankingSkills {
         log.debug("makePayment executed for card {}", cardId);
         return result;
     }
-
+    // ------------------------------------ GERÇEK BİR TOOL OLARAK KULLANILMAYACAK SADECE TEST AMAÇLI --------------------------------------
     @Tool("Belirli vadeli hesaplarındaki aylık faiz getirisini hesaplar ve döner.")
     public List<Map<String, Object>> calcMonthlyIncomeSavings(
             @P("Aylık faizi hesaplanacak vadeli hesabın benzersiz ID'lerinin listesi (örn: ['1', '2'])") List<String> accountIds) {
@@ -145,5 +147,53 @@ public class BankingSkills {
 
         log.debug("getCreditCardOptions executed for user: {}", userId);
         return safeCards;
+    }
+
+    @Tool("Kullanıcının kredi başvurusunu alır. Sadece talep edilen kredi tutarına ihtiyaç vardır. Çıktı olarak mutlaka başvuruda kullanılan tüm bilgileri içeren (TC, Ad, Doğum Tarihi, Meslek, Gelir, Tutar vb.) bir tablo oluştur.")
+    public String applyForLoan(
+            @P("Talep Edilen Kredi Tutarı") Double requestedAmount) {
+        Map<String, Object> profile = getUserProfile();
+
+        String filledTc = (String) profile.get("tc_no");
+        String filledName = (String) profile.get("name");
+        String filledBirth = (String) profile.get("birth_date");
+        String filledProfession = (String) profile.get("profession");
+        Double filledIncome = profile.get("monthly_income") instanceof Number ?
+                ((Number)profile.get("monthly_income")).doubleValue() : null;
+        if (filledTc == null || filledName == null || filledBirth == null ||
+                filledIncome == null || requestedAmount == null) {
+            throw new AiSkillExecutionException("Kredi başvurusu için kullanıcı profilindeki bilgiler eksik.");
+        }
+        Map<String,Object> payload = new HashMap<>();
+        payload.put("tcNo", filledTc);
+        payload.put("fullName", filledName);
+        payload.put("birthDate", filledBirth);
+        payload.put("profession", filledProfession);
+        payload.put("monthlyIncome", filledIncome);
+        payload.put("requestedAmount", requestedAmount);
+        payload.put("submittedByUserId", userIdProvider.getCurrentUserId());
+        payload.put("timestamp", new Date().toString());
+
+        // Return JSON string so LLM receives filled parameters (tool result), no UI form
+        try {
+            return new ObjectMapper().writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            throw new AiSkillExecutionException("Başvuru JSON'a dönüştürülürken hata: " + e.getMessage(), e);
+        }
+    }
+    @Tool("Kullanıcının kişisel bilgilerini getirir.")public Map<String, Object> getUserProfile() {
+        String userId = userIdProvider.getCurrentUserId();
+        User user = Optional.ofNullable(userRepository.getUser(userId))
+                .orElseThrow(() -> new AiSkillExecutionException("Kullanıcı bilgisi bulunamadı."));
+
+        Map<String, Object> profile = new HashMap<>();
+        profile.put("name", user.getName());
+        profile.put("tc_no", user.getTcNo());
+        profile.put("birth_date", user.getBirthDate());
+        profile.put("profession", user.getProfession());
+        profile.put("monthly_income", user.getMonthlyIncome());
+
+        log.debug("getUserProfile executed for user: {}", userId);
+        return profile;
     }
 }

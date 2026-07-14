@@ -84,27 +84,59 @@ sequenceDiagram
 
 ---
 
-## 🚀 Başlangıç ve Test Etme
+## 🚀 Kurulum ve Başlangıç (Gereksinimler)
 
-Sistemi sıfır hata toleransıyla test etmek ve Ollama ile iletişim kurmak için aşağıdaki adımları izleyin:
+Sistemi sorunsuz bir şekilde ayağa kaldırmak için **Docker** ve **Ollama**'nın bilgisayarınızda yüklü olması gerekmektedir.
 
-### 1. Ollama'yı Çalıştırın (Mocking İçin)
-Gerçek GPT-OSS 120B yerine yerel LLM mock sistemini başlatın:
-```bash
-ollama run gemma4:31b-cloud
-```
-*(ChromaDB kullanacaksanız Docker üzerinden `chromadb/chroma:0.5.23` başlatmayı unutmayın).*
+### 1. Ollama Kurulumu ve LLM'in Başlatılması
+Ollama, yapay zeka modelini yerel ortamınızda çalıştırmanızı sağlar.
+* **İndirme:** [ollama.com](https://ollama.com/) adresinden işletim sisteminize uygun sürümü indirin ve kurun.
+* **Modeli Çalıştırma:** Terminali açıp aşağıdaki komutu çalıştırarak projede kullandığımız modeli indirin ve başlatın:
+  ```bash
+  ollama run gemma4:31b-cloud
+  ```
+  *(Not: Bu model ilk çalıştırmada indirileceği için internet hızınıza bağlı olarak birkaç dakika sürebilir. Kurulum bittiğinde Ollama arka planda API üzerinden hizmet vermeye başlayacaktır.)*
 
-### 2. Uygulamayı "Dev" Profilinde Başlatın
-Terminal veya komut isteminden:
+### 2. Docker Kurulumu ve ChromaDB'nin Başlatılması
+Vektörel veritabanı (RAG) ve dinamik yetenek eşleşmeleri için ChromaDB'ye ihtiyacımız var.
+* **İndirme:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) sayfasından Docker'ı kurun ve başlatın.
+* **ChromaDB Konteynerini Ayağa Kaldırma:** Terminalden şu komutu girerek ChromaDB'yi çalıştırın:
+  ```bash
+  docker run -p 8000:8000 chromadb/chroma:0.5.23
+  ```
+  *(Bu komut ChromaDB imajını indirip 8000 portunda çalıştıracaktır.)*
+
+### 3. Uygulamayı "Dev" Profilinde Başlatın
+Gerekli servisler (Ollama ve ChromaDB) çalıştıktan sonra, Java uygulamasını geliştirme modunda başlatabilirsiniz:
 ```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-### 3. İnteraktif Sohbet Modu (Terminal Runner)
-Projeyi başlattıktan hemen sonra konsolda özel **Terminal Chat Runner** açılacaktır. Hiçbir `curl` veya Postman isteği atmadan direkt olarak konsoldan banka asistanıyla **doğal dilde konuşarak** sistemi test edebilirsiniz.
+### 4. İnteraktif Sohbet Modu (Terminal Runner)
+Projeyi başlattıktan hemen sonra konsolda özel **Terminal Chat Runner** açılacaktır. Hiçbir `curl` veya Postman isteği atmadan, direkt olarak konsoldan banka asistanıyla **doğal dilde konuşarak** sistemi test edebilirsiniz.
 ```text
 🏦 Java Banking Agent Terminaline Hoş Geldiniz! 🏦
 Sen: Vadesiz hesaplarımın limiti nedir?
 🤖 Agent: ...
 ```
+
+---
+
+## 🎯 Neler Yapabilirsiniz? (Test Edilebilir Özellikler)
+
+Proje ayağa kalktıktan sonra Agent ile konuşarak aşağıdaki yetenekleri test edebilirsiniz:
+
+1. **Hesap Bakiyesi Sorgulama:** *"Hesabımda ne kadar para var?"* veya *"Vadesiz hesap bakiyemi söyler misin?"* diyerek anlık bakiyenizi öğrenebilirsiniz.
+2. **Kredi Kartı Bilgileri:** *"Kredi kartı borcum ne kadar?"* diyerek kartlarınızın güncel borç ve limit durumunu sorgulayabilirsiniz.
+3. **Kredi Başvurusu Süreci:** *"Kredi çekmek istiyorum"* dediğinizde Agent, eksik bilgilerinizi bulmak için profilinizi çeker ve size sadece "Ne kadar kredi istiyorsunuz?" diye sorar. Ardından tüm bilgilerinizi derleyerek size bir tablo sunar.
+4. **Faiz ve Getiri Hesaplama:** *"Vadeli hesaplarımın aylık getirisi ne kadar?"* şeklinde sorular sorarak mevduat gelirlerinizi anında hesaplatabilirsiniz.
+5. **Belirsizlikleri Giderme:** Eğer *"Hesabımın limiti nedir?"* gibi ucu açık bir soru sorarsanız, Agent sizin hangi hesabınızı (Vadeli mi, Vadesiz mi) kastettiğinizi anlamak için hesap listenizi çeker ve size *"Hangi hesabınız için soruyorsunuz?"* diyerek etkileşime girer.
+
+---
+
+## 🛑 Agent'ı Yarıda Kesme (Interrupt - Human in the Loop Özelliği)
+
+Agent'lar, karar alma ve Tool (araç) çalıştırma süreçlerinde bağımsız hareket etseler de, sistemin sunduğu **Interrupt (Yarıda Kesme)** özelliği sayesinde kontrol her zaman kullanıcıdadır.
+
+* **Sürece Müdahale:** Yapılan işlem sırasında başka bir işlem isteği isteyebilirsiniz. Örneğin, Agent kredi başvurusu sürecindeyken siz *"Dur, önce hesabımın limitini öğrenmek istiyorum"* diyebilirsiniz. Bu durumda Agent, mevcut süreci durdurur ve yeni isteğinize odaklanır. Devam etmek istediğinizde önceki işlemin sorusunu cevaplayarak devam edebilirisiniz.
+* **Kullanıcı Onayı:** Agent, kritik işlemler (örn: para transferi, kredi başvurusu) sırasında kullanıcı onayı olmadan işlem yapmaz. Her zaman kullanıcıdan onay bekler ve bu sayede hatalı veya istenmeyen işlemlerin önüne geçilir. (İlerde eklenebilecek bu tarz işlemler için bir güvenlik mekanizması.)
